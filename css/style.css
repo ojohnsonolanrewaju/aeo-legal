@@ -522,7 +522,8 @@ p  { margin: 0 0 1em; }
 .form-tabs input:checked + label { background: var(--espresso); color: var(--white); }
 .form-tabs input:focus-visible + label { outline: 2px solid var(--bronze); outline-offset: -2px; }
 
-.booking-only { display: none; }
+.booking-only,
+.field-row.booking-only { display: none; }
 .contact-form.is-booking .booking-only { display: block; }
 .contact-form.is-booking .field-row.booking-only { display: grid; }
 
@@ -580,6 +581,22 @@ p  { margin: 0 0 1em; }
 .footer a:hover { color: var(--white); }
 .footer-legal { padding-top: 26px; font-size: .78rem; color: rgba(251,248,243,.5); }
 .footer-legal p { margin: 0 0 6px; }
+
+/* ── WhatsApp float ── */
+.wa-float {
+  position: fixed; right: 20px; bottom: 20px; z-index: 200;
+  width: 56px; height: 56px; border-radius: 50%;
+  background: #25D366; color: var(--white);
+  display: grid; place-items: center;
+  box-shadow: 0 8px 22px rgba(43,29,20,.28);
+  animation: wa-pulse 2.8s infinite;
+}
+.wa-float:hover { background: #1EBE5A; }
+@keyframes wa-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(37,211,102,.45), 0 8px 22px rgba(43,29,20,.28); }
+  70%  { box-shadow: 0 0 0 14px rgba(37,211,102,0), 0 8px 22px rgba(43,29,20,.28); }
+  100% { box-shadow: 0 0 0 0 rgba(37,211,102,0), 0 8px 22px rgba(43,29,20,.28); }
+}
 
 /* ── Simple prose page (privacy) ── */
 .prose { max-width: 760px; }

@@ -8,12 +8,26 @@
 const FIRM = {
   phoneDisplay: '+234 706 682 3673',
   phone:        '+2347066823673',
+  whatsapp:     '2347066823673',   // digits only, used for wa.me links
   email:        'aezekiel@aeolegalservices.com',
-  formEndpoint: ''
+  formEndpoint: '',
+  // LinkedIn profile URLs. A team member's link appears once filled in.
+  linkedin: {
+    ayomide: '',
+    tomisin: '',
+    lydia:   ''
+  }
 };
 
 // ── Contact links ──
 document.querySelectorAll('[data-link="phone"]').forEach(a => { a.href = `tel:${FIRM.phone}`; });
+document.querySelectorAll('[data-link="whatsapp"]').forEach(a => {
+  a.href = `https://wa.me/${FIRM.whatsapp}?text=${encodeURIComponent('Hello AEO Legal Services, I would like to make an enquiry.')}`;
+});
+document.querySelectorAll('[data-linkedin]').forEach(a => {
+  const url = FIRM.linkedin[a.dataset.linkedin];
+  if (url) { a.href = url; a.hidden = false; }
+});
 document.querySelectorAll('[data-link="email"]').forEach(a => { a.href = `mailto:${FIRM.email}`; });
 document.querySelectorAll('[data-text="phone"]').forEach(el => { el.textContent = FIRM.phoneDisplay; });
 document.querySelectorAll('[data-text="email"]').forEach(el => { el.textContent = FIRM.email; });

@@ -30,11 +30,15 @@ All contact details are set in one place, at the top of `js/main.js`:
 const FIRM = {
   phoneDisplay: '+234 706 682 3673',
   phone:        '+2347066823673',
+  whatsapp:     '2347066823673',
   email:        'aezekiel@aeolegalservices.com',
-  formEndpoint: ''   // e.g. 'https://formspree.io/f/abcd1234'
+  formEndpoint: '',  // e.g. 'https://formspree.io/f/abcd1234'
+  linkedin: { ayomide: '', tomisin: '', lydia: '' }
 };
 ```
 
+- **WhatsApp:** the green button and the WhatsApp links use `whatsapp`.
+- **LinkedIn:** paste each person's profile URL into `linkedin` and a link appears on the Team page.
 - **Without `formEndpoint`**, the form opens the visitor's email app with the message pre-filled.
 - **With a Formspree endpoint**, messages go straight to the firm's inbox. To set it up, create a free account at formspree.io using the firm email, create a form, then paste its URL into `formEndpoint`.
 
