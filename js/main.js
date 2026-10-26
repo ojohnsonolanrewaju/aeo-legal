@@ -1,29 +1,22 @@
 /* ─────────────────────────────────────────────
-   AEO Legal — site behaviour
+   AEO Legal Services — site behaviour
    ───────────────────────────────────────────── */
 
 // Firm contact details. Update here and every link on the site follows.
-// whatsapp: international format, digits only (e.g. '2348012345678').
+// formEndpoint: a Formspree URL (https://formspree.io/f/XXXXXXXX) once the
+// form is set up. Until then the form opens the visitor's email app instead.
 const FIRM = {
-  phoneDisplay: '[Phone number]',
-  whatsapp:     '',
-  email:        ''
+  phoneDisplay: '+234 706 682 3673',
+  phone:        '+2347066823673',
+  email:        'aezekiel@aeolegalservices.com',
+  formEndpoint: ''
 };
 
 // ── Contact links ──
-const waBase = FIRM.whatsapp ? `https://wa.me/${FIRM.whatsapp}` : '#contact';
-
-document.querySelectorAll('[data-link="whatsapp"]').forEach(a => {
-  a.href = waBase;
-  if (!FIRM.whatsapp) a.removeAttribute('target');
-});
-document.querySelectorAll('[data-link="email"]').forEach(a => {
-  a.href = FIRM.email ? `mailto:${FIRM.email}` : '#contact';
-});
+document.querySelectorAll('[data-link="phone"]').forEach(a => { a.href = `tel:${FIRM.phone}`; });
+document.querySelectorAll('[data-link="email"]').forEach(a => { a.href = `mailto:${FIRM.email}`; });
 document.querySelectorAll('[data-text="phone"]').forEach(el => { el.textContent = FIRM.phoneDisplay; });
-document.querySelectorAll('[data-text="email"]').forEach(el => {
-  if (FIRM.email) el.textContent = FIRM.email;
-});
+document.querySelectorAll('[data-text="email"]').forEach(el => { el.textContent = FIRM.email; });
 
 // ── Nav: scrolled state + mobile menu ──
 const nav = document.getElementById('nav');
@@ -31,7 +24,7 @@ const navToggle = document.getElementById('nav-toggle');
 const navLinks = document.getElementById('nav-links');
 
 function onScroll() {
-  nav.classList.toggle('scrolled', window.scrollY > 40);
+  nav.classList.toggle('scrolled', window.scrollY > 10);
 }
 window.addEventListener('scroll', onScroll, { passive: true });
 onScroll();
@@ -42,47 +35,91 @@ function setMenu(open) {
   navToggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
 }
 navToggle.addEventListener('click', () => setMenu(!navLinks.classList.contains('open')));
-navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => setMenu(false)));
 
-// ── Contact form → WhatsApp (no backend needed) ──
+// ── Contact / booking form ──
 const form = document.getElementById('contact-form');
-const note = document.getElementById('form-note');
-
-function showNote(msg, type) {
-  note.textContent = msg;
-  note.className = `form-note ${type}`;
-}
 
 if (form) {
-  form.addEventListener('submit', e => {
+  const note = document.getElementById('form-note');
+  const submitBtn = form.querySelector('button[type="submit"]');
+  const dateInput = document.getElementById('f-date');
+
+  // Earliest bookable date is tomorrow
+  if (dateInput) {
+    const t = new Date();
+    t.setDate(t.getDate() + 1);
+    dateInput.min = t.toISOString().split('T')[0];
+  }
+
+  function isBooking() {
+    return form.querySelector('input[name="request"]:checked').value === 'booking';
+  }
+
+  function syncMode() {
+    const booking = isBooking();
+    form.classList.toggle('is-booking', booking);
+    form.querySelectorAll('.booking-only [data-required]').forEach(el => { el.required = booking; });
+    submitBtn.textContent = booking ? 'Request consultation' : 'Send enquiry';
+  }
+  form.querySelectorAll('input[name="request"]').forEach(r => r.addEventListener('change', syncMode));
+
+  // Links like contact.html#book open the form in booking mode
+  if (location.hash === '#book') {
+    form.querySelector('input[value="booking"]').checked = true;
+  }
+  syncMode();
+
+  function showNote(msg, type) {
+    note.textContent = msg;
+    note.className = `form-note ${type}`;
+  }
+
+  function buildMessage(d) {
+    const lines = [];
+    if (isBooking()) {
+      lines.push('CONSULTATION REQUEST', `Format: ${d.format}`, `Preferred date: ${d.date}`, `Preferred time: ${d.time}`, '');
+    }
+    lines.push(`Name: ${d.name}`, `Phone: ${d.phone}`, `Email: ${d.email}`, `Area of law: ${d.area}`, '', d.message);
+    return lines.join('\n');
+  }
+
+  form.addEventListener('submit', async e => {
     e.preventDefault();
-    const data = Object.fromEntries(new FormData(form));
-    const name = (data.name || '').trim();
-    const phone = (data.phone || '').trim();
-    const message = (data.message || '').trim();
+    if (form.elements.company && form.elements.company.value) return; // spam honeypot
 
-    if (!name || !phone || !message) {
-      showNote('Please fill in your name, phone number and a brief description.', 'error');
-      return;
-    }
-    if (!data.consent) {
-      showNote('Please tick the consent box so we can respond to you.', 'error');
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      showNote('Please complete the required fields.', 'error');
       return;
     }
 
-    const lines = [`Hello AEO Legal, my name is ${name}.`, `Area: ${data.area}`, `Phone: ${phone}`];
-    if (data.email && data.email.trim()) lines.push(`Email: ${data.email.trim()}`);
-    lines.push('', message);
-    const text = lines.join('\n');
+    const d = Object.fromEntries(new FormData(form));
+    Object.keys(d).forEach(k => { d[k] = String(d[k]).trim(); });
+    const subject = `${isBooking() ? 'Consultation request' : 'Website enquiry'}: ${d.area} (${d.name})`;
 
-    if (FIRM.whatsapp) {
-      window.open(`https://wa.me/${FIRM.whatsapp}?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
-      showNote('WhatsApp has opened with your message. Just press send.', 'ok');
-    } else if (FIRM.email) {
-      window.location.href = `mailto:${FIRM.email}?subject=${encodeURIComponent('Website enquiry: ' + data.area)}&body=${encodeURIComponent(text)}`;
-      showNote('Your email app has opened with your message.', 'ok');
-    } else {
-      showNote('Draft site: contact details have not been added yet.', 'error');
+    if (!FIRM.formEndpoint) {
+      window.location.href = `mailto:${FIRM.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(buildMessage(d))}`;
+      showNote('Your email app has opened with your message. Please press send.', 'ok');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending…';
+    try {
+      const res = await fetch(FIRM.formEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ _subject: subject, _replyto: d.email, ...d, request: isBooking() ? 'Consultation' : 'Enquiry' })
+      });
+      if (!res.ok) throw new Error(res.status);
+      form.reset();
+      syncMode();
+      showNote('Thank you. Your message has been received and we will respond within one working day.', 'ok');
+    } catch (err) {
+      showNote(`Sorry, your message could not be sent. Please email us at ${FIRM.email} or call ${FIRM.phoneDisplay}.`, 'error');
+    } finally {
+      submitBtn.disabled = false;
+      if (submitBtn.textContent === 'Sending…') syncMode();
     }
   });
 }
